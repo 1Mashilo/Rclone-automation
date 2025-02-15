@@ -23,7 +23,7 @@ jobs:
           echo "${{ secrets.RCLONE }}" | base64 --decode > ~/.config/rclone/rclone.conf
 
       - name: Generate Test File
-        run: python3 script.py
+        run: python3 Script.py
 
       - name: Upload File to Google Drive
         run: rclone copy test_file.txt mashilo:/TestFolder --progress
