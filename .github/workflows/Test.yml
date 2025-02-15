@@ -1,4 +1,4 @@
-name: Upload to Google Drive
+name: Upload to Google Drive & Notify Slack
 
 on:
   push:
@@ -20,10 +20,28 @@ jobs:
       - name: Configure Rclone
         run: |
           mkdir -p ~/.config/rclone/
-          echo "${{ secrets.RCLONE}}" | base64 --decode > ~/.config/rclone/rclone.conf
+          echo "${{ secrets.RCLONE }}" | base64 --decode > ~/.config/rclone/rclone.conf
 
       - name: Generate Test File
-        run: python3 Script.py
+        run: python3 script.py
 
       - name: Upload File to Google Drive
         run: rclone copy test_file.txt mashilo:/TestFolder --progress
+
+      - name: Notify Slack on Success
+        if: success()
+        run: |
+          curl -X POST -H 'Content-type: application/json' --data '{
+            "text": "✅ *Build Successful!* 🎉\nThe file has been uploaded to Google Drive successfully.",
+            "username": "GitHub Actions",
+            "icon_emoji": ":rocket:"
+          }' ${{ secrets.SLACK_WEBHOOK }}
+
+      - name: Notify Slack on Failure
+        if: failure()
+        run: |
+          curl -X POST -H 'Content-type: application/json' --data '{
+            "text": "❌ *Build Failed!* 🔴\nSomething went wrong with the file upload.",
+            "username": "GitHub Actions",
+            "icon_emoji": ":x:"
+          }' ${{ secrets.SLACK_WEBHOOK }}
